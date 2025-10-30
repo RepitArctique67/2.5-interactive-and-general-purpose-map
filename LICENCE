@@ -1,1 +1,61 @@
+Copyright (c) 2025 Matias Rubinel. All rights reserved.
+
+LICENSE AGREEMENT — MATIAS RUBINEL INTERACTIVE 2.5D WORLD MAP REPOSITORY
+
+Effective date: 2025-10-30
+
+DEFINITIONS
+1. "Author" means Matias Rubinel.
+2. "Software" means the contents of this repository, including source code, documentation, design files, assets, examples, tests, and any associated materials.
+3. "Repository" means the hosted project (e.g., this GitHub repository) and its official forks authorized in writing by the Author.
+4. "Personal Use" means using the Software solely for private, non-commercial experimentation, learning, evaluation, or research by an individual.
+5. "Non-Commercial Use" means use that is not intended for or directed toward commercial advantage or monetary compensation.
+6. "Commercial Use" means use of the Software, in whole or in part, to provide, directly or indirectly, products, services, features, or content for which a person or entity receives money, fees, subscriptions, advertising, barter, or other consideration; or use by a business, public or private entity for their operational purposes.
+7. "Redistribute" means to copy, publish, broadcast, sublicense, lease, rent, sell, loan or otherwise make available the Software to third parties.
+8. "Derivative Work" means a work based upon the Software or substantial portions thereof, including porting, translations, adaptations, modifications, or implementations that reproduce original structure, sequence, organization, or architecture.
+
+LICENSE GRANT
+Subject to the terms and conditions below, the Author grants you a limited, non-exclusive, non-transferable, revocable license to:
+- View, clone, and run the Software for Personal Use or Non-Commercial Use.
+- Create modifications for Personal Use or Non-Commercial Use, provided all copyright notices and this License remain intact.
+
+RESTRICTIONS
+Except as expressly permitted above, you may not:
+a) Redistribute, publish, sublicense, sell, lease, or otherwise transfer the Software, in whole or in part, to any third party without prior written permission from the Author.
+b) Use the Software, its architecture, design, or trade dress, or any substantial portion thereof, to offer or enable competing products, services, or derivative projects for commercial purposes.
+c) Remove, obscure, or alter any copyright, authorship, or license notices contained within the Software.
+d) Circumvent or attempt to circumvent licensing controls or attribution mechanisms.
+
+CONTRIBUTIONS, CONTRIBUTOR LICENSES, AND THIRD-PARTY CODE
+All contributions to this Repository (pull requests, patches, issues that include code, design, or data) are submitted under the condition that the Author may, at Author’s discretion, require contributors to sign a Contributor License Agreement (CLA) or assign copyright. No contribution confers any license to third parties unless the Author explicitly grants such a license in writing.
+
+INTELLECTUAL PROPERTY & IDEAS
+All rights, title, and interest in the Software and its non-functional concepts (including but not limited to unique workflows, interfaces, data presentation, and "look and feel") remain with the Author. Nothing in this License grants rights to use the Author’s trademarks, trade names, logos, or service marks. This License does not prevent the Author from pursuing legal remedies against parties who copy or replicate unique expressive elements or trade dress in bad faith.
+
+NO IMPLIED LICENSE
+No patent or other intellectual property rights are granted by implication, estoppel, or otherwise. You acquire no rights to the Author’s patents, patent applications, or other proprietary rights.
+
+TERMINATION
+This License is effective until terminated. This License will terminate automatically without notice if you fail to comply with any term herein. Upon termination you must promptly destroy all copies of the Software in your possession or control and cease any use of it.
+
+DISCLAIMER OF WARRANTY; LIMITATION OF LIABILITY
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. TO THE FULLEST EXTENT PERMITTED BY LAW, THE AUTHOR DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE SOFTWARE.
+
+ENFORCEMENT AND REMEDIES
+Violations of this License may result in injunctive relief and monetary damages. The Author reserves all rights and remedies under applicable law, including claims for breach of contract, copyright infringement, unfair competition, or other civil remedies.
+
+GOVERNING LAW AND JURISDICTION
+This License is governed by and construed in accordance with the laws of [France]. Any disputes arising under or in connection with this License shall be subject to the exclusive jurisdiction of the courts located in [Paris, France]. (Replace with your chosen jurisdiction if different.)
+
+SEVERABILITY
+If any provision of this License is held to be unenforceable, illegal, or invalid in whole or in part, the remainder of that provision and all other provisions of this License shall remain in full force and effect.
+
+CONTACT AND COMMERCIAL LICENSING
+To request permission for redistribution, commercial licensing, partnership, or other authorised uses, contact:
+Email: matias.rubinel@gmail.com
+
+ENTIRE AGREEMENT
+This License constitutes the entire agreement between you and the Author with respect to the use of the Software and supersedes all prior or contemporaneous understandings.
+
+-- End of License --
 
