@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plateforme Cartographique Globale</title>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Cesium.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            background: #0a0e27;
+        }
+
+        #cesiumContainer {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* En-tête */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(10, 14, 39, 0.95), transparent);
+            padding: 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Panneau latéral */
+        .side-panel {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            width: 320px;
+            max-height: calc(100vh - 200px);
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 999;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .side-panel.collapsed {
+            display: none;
+        }
+
+        .panel-section {
+            margin-bottom: 25px;
+        }
+
+        .panel-section h3 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-section h3::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+        }
+
+        /* Contrôle de couches */
+        .layer-item {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .layer-item:hover {
+            background: rgba(51, 65, 85, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .layer-info {
+            flex: 1;
+        }
+
+        .layer-name {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .layer-type {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #334155;
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(24px);
+        }
+
+        /* Timeline au bas de l'écran */
+        .timeline-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 1000px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .timeline-title {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .timeline-date {
+            color: #3b82f6;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .timeline-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .timeline-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #334155;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .timeline-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+        }
+
+        .timeline-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+        }
+
+        .timeline-marks {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding: 0 10px;
+        }
+
+        .timeline-mark {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        /* Boutons */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(51, 65, 85, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(71, 85, 105, 0.9);
+        }
+
+        .btn-icon {
+            padding: 10px;
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-icon:hover {
+            background: rgba(71, 85, 105, 0.9);
+        }
+
+        /* Barre de recherche */
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .search-input::placeholder {
+            color: #64748b;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        /* Mode toggle */
+        .mode-toggle {
+            display: flex;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        /* Info panel */
+        .info-panel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 300px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .info-panel.visible {
+            display: block;
+        }
+
+        .info-title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .info-content {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-stat:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Animation de chargement */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2000;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(59, 130, 246, 0.2);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Scrollbar personnalisée */
+        .side-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .side-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .side-panel::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+
+        .side-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        /* Icônes SVG */
+        .icon {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .icon-small {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen" class="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Chargement du globe terrestre...</div>
+    </div>
+
+    <div class="header">
+        <h1>🌍 Plateforme Cartographique Globale</h1>
+        <div class="header-controls">
+            <button class="btn btn-secondary" onclick="togglePanel()">
+                <svg class="icon icon-small" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Couches
+            </button>
+            <button class="btn btn-secondary" onclick="toggleInfo()">
+                <svg class="icon icon-small" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Info
+            </button>
+        </div>
+    </div>
+
+    <div id="sidePanel" class="side-panel">
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un lieu...">
+            <svg class="icon icon-small search-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </div>
+
+        <div class="panel-section">
+            <h3>Mode d'affichage</h3>
+            <div class="mode-toggle">
+                <button class="mode-btn active" onclick="setMode('historical')">Historique</button>
+                <button class="mode-btn" onclick="setMode('realtime')">Temps réel</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>Couches de données</h3>
+            <div id="layersList"></div>
+        </div>
+
+        <div class="panel-section">
+            <h3>Outils</h3>
+            <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="measureDistance()">
+                <svg class="icon icon-small" viewBox="0 0 24 24">
+                    <path d="M2 17 17 2"></path>
+                    <path d="m2 17 7-7"></path>
+                    <path d="m9 10 7.5-7.5"></path>
+                    <path d="m16.5 2.5 5 5"></path>
+                    <path d="m19 5 3 3"></path>
+                </svg>
+                Mesurer une distance
+            </button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="resetView()">
+                <svg class="icon icon-small" viewBox="0 0 24 24">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
+                Réinitialiser la vue
+            </button>
+        </div>
+    </div>
+
+    <div id="infoPanel" class="info-panel">
+        <div class="info-title">Informations</div>
+        <div class="info-content">
+            <div class="info-stat">
+                <span class="info-label">Version</span>
+                <span class="info-value">Alpha 0.1</span>
+            </div>
+            <div class="info-stat">
+                <span class="info-label">Couches actives</span>
+                <span class="info-value" id="activeLayers">2</span>
+            </div>
+            <div class="info-stat">
+                <span class="info-label">Source des données</span>
+                <span class="info-value">OpenStreetMap</span>
+            </div>
+            <div class="info-stat">
+                <span class="info-label">Technologie</span>
+                <span class="info-value">CesiumJS 1.110</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="cesiumContainer"></div>
+
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <span class="timeline-title">Ligne temporelle</span>
+            <div class="timeline-controls">
+                <button class="btn btn-icon" onclick="playAnimation()">
+                    <svg class="icon icon-small" viewBox="0 0 24 24">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </button>
+                <span class="timeline-date" id="currentYear">2025</span>
+            </div>
+        </div>
+        <input type="range" class="timeline-slider" id="timelineSlider" min="1900" max="2025" value="2025" step="1">
+        <div class="timeline-marks">
+            <span class="timeline-mark">1900</span>
+            <span class="timeline-mark">1950</span>
+            <span class="timeline-mark">2000</span>
+            <span class="timeline-mark">2025</span>
+        </div>
+    </div>
+
+    <script>
+        // Configuration Cesium
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5N2UyMjcwOS00MDY1LTQxYjEtYjZjMy00YTU0ZTg1YmUwYWQiLCJpZCI6ODAzMDYsImlhdCI6MTY0Mjc5MTc4MX0.dkwAL1CcljUV7NA7fDbhXXnmyZQU_c-G5zRx8PtEcxE';
+
+        let viewer;
+        let currentMode = 'historical';
+        let isPlaying = false;
+        let animationInterval;
+
+        // Définition des couches
+        const layers = [
+            { id: 'osm', name: 'OpenStreetMap', type: 'Base cartographique', active: true, provider: null },
+            { id: 'terrain', name: 'Relief / Terrain', type: 'Topographie', active: true, provider: null },
+            { id: 'satellite', name: 'Images Satellite', type: 'Imagerie', active: false, provider: null },
+            { id: 'borders', name: 'Frontières', type: 'Administratif', active: false, provider: null },
+            { id: 'climate', name: 'Données climatiques', type: 'Météo', active: false, provider: null }
+        ];
+
+        // Initialisation du viewer Cesium
+        function initCesium() {
+            viewer = new Cesium.Viewer('cesiumContainer', {
+                terrainProvider: Cesium.createWorldTerrain(),
+                imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+                    url: 'https://a.tile.openstreetmap.org/'
+                }),
+                baseLayerPicker: false,
+                geocoder: false,
+                homeButton: false,
+                sceneModePicker: false,
+                navigationHelpButton: false,
+                animation: false,
+                timeline: false,
+                fullscreenButton: false,
+                vrButton: false,
+                infoBox: true,
+                selectionIndicator: true,
+                skyBox: new Cesium.SkyBox({
+                    sources: {
+                        positiveX: 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_px.jpg',
+                        negativeX: 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_mx.jpg',
+                        positiveY: 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_py.jpg',
+                        negativeY: 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_my.jpg',
+                        positiveZ: 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_pz.jpg',
+                        negativeZ: 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_mz.jpg'
+                    }
+                })
+            });
+
+            // Configuration de la scène
+            viewer.scene.globe.enableLighting = true;
+            viewer.scene.globe.depthTestAgainstTerrain = true;
+            viewer.scene.skyAtmosphere.hueShift = -0.1;
+            viewer.scene.skyAtmosphere.saturationShift = 0.1;
+            viewer.scene.skyAtmosphere.brightnessShift = 0.1;
+
+            // Ajouter des points d'intérêt exemples
+            addSampleLocations();
+
+            // Masquer l'écran de chargement
+            document.getElementById('loadingScreen').style.display = 'none';
+
+            // Voler vers une vue initiale
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(2.3522, 48.8566, 15000000),
+                orientation: {
+                    heading: Cesium.Math.toRadians(0),
+                    pitch: Cesium.Math.toRadians(-90),
+                    roll: 0.0
+                },
+                duration: 3
+            });
+        }
+
+        // Ajouter des points d'intérêt
+        function addSampleLocations() {
+            const locations = [
+                { name: 'Paris', lon: 2.3522, lat: 48.8566, desc: 'Capitale de la France' },
+                { name: 'New York', lon: -74.0060, lat: 40.7128, desc: 'Ville emblématique des États-Unis' },
+                { name: 'Tokyo', lon: 139.6917, lat: 35.6895, desc: 'Capitale du Japon' },
+                { name: 'Sydney', lon: 151.2093, lat: -33.8688, desc: 'Australie' },
+                { name: 'Le Caire', lon: 31.2357, lat: 30.0444, desc: 'Égypte' }
+            ];
+
+            locations.forEach(loc => {
+                viewer.entities.add({
+                    name: loc.name,
+                    position: Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat),
+                    point: {
+                        pixelSize: 12,
+                        color: Cesium.Color.fromCssColorString('#3b82f6'),
+                        outlineColor: Cesium.Color.WHITE,
+                        outlineWidth: 2,
+                        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                    },
+                    label: {
+                        text: loc.name,
+                        font: '14pt sans-serif',
+                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                        outlineWidth: 2,
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                        pixelOffset: new Cesium.Cartesian2(0, -12),
+                        fillColor: Cesium.Color.WHITE,
+                        outlineColor: Cesium.Color.BLACK,
+                        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                    },
+                    description: `<div style="padding:10px;"><h3>${loc.name}</h3><p>${loc.desc}</p></div>`
+                });
+            });
+        }
+
+        // Générer la liste des couches
+        function renderLayers() {
+            const container = document.getElementById('layersList');
+            container.innerHTML = '';
+
+            layers.forEach(layer => {
+                const div = document.createElement('div');
+                div.className = 'layer-item';
+                div.innerHTML = `
+                    <div class="layer-info">
+                        <div class="layer-name">${layer.name}</div>
+                        <div class="layer-type">${layer.type}</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${layer.active ? 'checked' : ''} onchange="toggleLayer('${layer.id}')">
+                        <span class="toggle-slider"></span>
+                    </label>
+                `;
+                container.appendChild(div);
+            });
+
+            updateActiveLayersCount();
+        }
+
+        // Basculer une couche
+        function toggleLayer(layerId) {
+            const layer = layers.find(l => l.id === layerId);
+            if (layer) {
+                layer.active = !layer.active;
+                
+                // Logique de basculement selon le type de couche
+                if (layerId === 'satellite' && layer.active) {
+                    viewer.imageryLayers.addImageryProvider(
+                        new Cesium.IonImageryProvider({ assetId: 2 })
+                    );
+                } else if (layerId === 'terrain') {
+                    viewer.scene.globe.enableLighting = layer.active;
+                }
+
+                updateActiveLayersCount();
+            }
+        }
+
+        // Mettre à jour le compteur de couches actives
+        function updateActiveLayersCount() {
+            const count = layers.filter(l => l.active).length;
+            document.getElementById('activeLayers').textContent = count;
+        }
+
+        // Timeline - mise à jour de l'année
+        const slider = document.getElementById('timelineSlider');
+        const yearDisplay = document.getElementById('currentYear');
+
+        slider.addEventListener('input', (e) => {
+            const year = e.target.value;
+            yearDisplay.textContent = year;
+            updateMapForYear(year);
+        });
+
+        // Mettre à jour la carte selon l'année
+        function updateMapForYear(year) {
+            // Ici, on ajouterait la logique pour charger les données historiques
+            console.log(`Affichage des données pour l'année ${year}`);
+        }
+
+        // Animation de la timeline
+        function playAnimation() {
+            if (isPlaying) {
+                clearInterval(animationInterval);
+                isPlaying = false;
+            } else {
+                isPlaying = true;
+                animationInterval = setInterval(() => {
+                    let currentValue = parseInt(slider.value);
+                    if (currentValue < 2025) {
+                        currentValue++;
+                        slider.value = currentValue;
+                        yearDisplay.textContent = currentValue;
+                        updateMapForYear(currentValue);
+                    } else {
+                        clearInterval(animationInterval);
+                        isPlaying = false;
+                    }
+                }, 100);
+            }
+        }
+
+        // Changer de mode
+        function setMode(mode) {
+            currentMode = mode;
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'realtime') {
+                slider.value = 2025;
+                yearDisplay.textContent = '2025';
+                console.log('Mode temps réel activé');
+            } else {
+                console.log('Mode historique activé');
+            }
+        }
+
+        // Recherche de lieu
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchLocation(e.target.value);
+            }
+        });
+
+        function searchLocation(query) {
+            if (!query) return;
+
+            // Utiliser l'API de géocodage Nominatim (OpenStreetMap)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const result = data[0];
+                        const lon = parseFloat(result.lon);
+                        const lat = parseFloat(result.lat);
+
+                        // Voler vers le lieu trouvé
+                        viewer.camera.flyTo({
+                            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 10000),
+                            duration: 2
+                        });
+
+                        // Ajouter un marqueur temporaire
+                        viewer.entities.add({
+                            name: result.display_name,
+                            position: Cesium.Cartesian3.fromDegrees(lon, lat),
+                            point: {
+                                pixelSize: 15,
+                                color: Cesium.Color.fromCssColorString('#f59e0b'),
+                                outlineColor: Cesium.Color.WHITE,
+                                outlineWidth: 3
+                            },
+                            label: {
+                                text: result.display_name.split(',')[0],
+                                font: '16pt sans-serif',
+                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                outlineWidth: 2,
+                                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                                pixelOffset: new Cesium.Cartesian2(0, -15),
+                                fillColor: Cesium.Color.WHITE,
+                                outlineColor: Cesium.Color.BLACK
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur de recherche:', error);
+                    alert('Lieu non trouvé. Essayez une autre recherche.');
+                });
+        }
+
+        // Mesurer une distance
+        let measurementPoints = [];
+        let isMeasuring = false;
+
+        function measureDistance() {
+            if (isMeasuring) {
+                // Arrêter la mesure
+                isMeasuring = false;
+                measurementPoints = [];
+                alert('Mesure terminée');
+                return;
+            }
+
+            isMeasuring = true;
+            measurementPoints = [];
+            alert('Cliquez sur deux points sur le globe pour mesurer la distance');
+
+            const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+            
+            handler.setInputAction((click) => {
+                if (!isMeasuring) {
+                    handler.destroy();
+                    return;
+                }
+
+                const cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+                if (cartesian) {
+                    measurementPoints.push(cartesian);
+
+                    // Ajouter un point visuel
+                    viewer.entities.add({
+                        position: cartesian,
+                        point: {
+                            pixelSize: 10,
+                            color: Cesium.Color.RED,
+                            outlineColor: Cesium.Color.WHITE,
+                            outlineWidth: 2
+                        }
+                    });
+
+                    if (measurementPoints.length === 2) {
+                        // Calculer et afficher la distance
+                        const distance = Cesium.Cartesian3.distance(measurementPoints[0], measurementPoints[1]);
+                        const distanceKm = (distance / 1000).toFixed(2);
+
+                        // Dessiner une ligne
+                        viewer.entities.add({
+                            polyline: {
+                                positions: measurementPoints,
+                                width: 3,
+                                material: Cesium.Color.RED,
+                                clampToGround: false
+                            }
+                        });
+
+                        // Afficher le résultat
+                        const midpoint = Cesium.Cartesian3.midpoint(
+                            measurementPoints[0],
+                            measurementPoints[1],
+                            new Cesium.Cartesian3()
+                        );
+
+                        viewer.entities.add({
+                            position: midpoint,
+                            label: {
+                                text: `${distanceKm} km`,
+                                font: '18pt sans-serif',
+                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                outlineWidth: 3,
+                                fillColor: Cesium.Color.WHITE,
+                                outlineColor: Cesium.Color.RED,
+                                pixelOffset: new Cesium.Cartesian2(0, -20),
+                                showBackground: true,
+                                backgroundColor: Cesium.Color.fromCssColorString('rgba(0,0,0,0.7)'),
+                                backgroundPadding: new Cesium.Cartesian2(8, 4)
+                            }
+                        });
+
+                        alert(`Distance mesurée : ${distanceKm} km`);
+                        isMeasuring = false;
+                        handler.destroy();
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        }
+
+        // Réinitialiser la vue
+        function resetView() {
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(2.3522, 48.8566, 15000000),
+                orientation: {
+                    heading: Cesium.Math.toRadians(0),
+                    pitch: Cesium.Math.toRadians(-90),
+                    roll: 0.0
+                },
+                duration: 2
+            });
+
+            // Supprimer les entités temporaires (mesures, recherches)
+            const entitiesToRemove = [];
+            viewer.entities.values.forEach(entity => {
+                if (entity.polyline || (entity.point && entity.point.color.getValue().equals(Cesium.Color.RED))) {
+                    entitiesToRemove.push(entity);
+                }
+            });
+            entitiesToRemove.forEach(entity => viewer.entities.remove(entity));
+        }
+
+        // Basculer le panneau latéral
+        function togglePanel() {
+            const panel = document.getElementById('sidePanel');
+            panel.classList.toggle('collapsed');
+        }
+
+        // Basculer le panneau info
+        function toggleInfo() {
+            const panel = document.getElementById('infoPanel');
+            panel.classList.toggle('visible');
+        }
+
+        // Initialisation au chargement
+        window.addEventListener('load', () => {
+            initCesium();
+            renderLayers();
+        });
+
+        // Gestion du redimensionnement
+        window.addEventListener('resize', () => {
+            if (viewer) {
+                viewer.resize();
+            }
+        });
+    </script>
+</body>
+</html>
