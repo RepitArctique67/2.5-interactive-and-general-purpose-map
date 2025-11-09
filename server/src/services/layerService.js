@@ -1,0 +1,136 @@
+const Layer = require('../models/Layer');
+const { AppError } = require('../middleware/errorHandler');
+const { layerCache } = require('../utils/cache');
+const logger = require('../utils/logger');
+
+class LayerService {
+    async findAll(filters = {}) {
+        try {
+            const cacheKey = `layers:${JSON.stringify(filters)}`;
+
+            return await layerCache.wrap(
+                cacheKey,
+                async () => {
+                    const layers = await Layer.findAll(filters);
+                    logger.info(`✅ ${layers.length} couches récupérées`);
+                    return layers;
+                },
+                3600 // 1 heure
+            );
+        } catch (error) {
+            logger.error('Erreur findAll layers:', error);
+            throw new AppError('Erreur lors de la récupération des couches', 500);
+        }
+    }
+
+    async findById(id) {
+        try {
+            const cacheKey = `layer:${id}`;
+
+            return await layerCache.wrap(
+                cacheKey,
+                async () => {
+                    const layer = await Layer.findById(id);
+                    if (!layer) {
+                        throw new AppError(`Couche ${id} non trouvée`, 404);
+                    }
+                    return layer;
+                },
+                3600
+            );
+        } catch (error) {
+            if (error instanceof AppError) throw error;
+            logger.error('Erreur findById layer:', error);
+            throw new AppError('Erreur lors de la récupération de la couche', 500);
+        }
+    }
+
+    async create(layerData) {
+        try {
+            const layer = await Layer.create(layerData);
+
+            // Invalider le cache
+            layerCache.flush();
+
+            logger.info(`✅ Couche créée: ${layer.name} (ID: ${layer.id})`);
+            return layer;
+        } catch (error) {
+            logger.error('Erreur create layer:', error);
+            throw new AppError('Erreur lors de la création de la couche', 500);
+        }
+    }
+
+    async update(id, layerData) {
+        try {
+            // Vérifier que la couche existe
+            await this.findById(id);
+
+            const layer = await Layer.update(id, layerData);
+
+            // Invalider le cache
+            layerCache.delete(`layer:${id}`);
+            layerCache.flush();
+
+            logger.info(`✅ Couche mise à jour: ${layer.name} (ID: ${layer.id})`);
+            return layer;
+        } catch (error) {
+            if (error instanceof AppError) throw error;
+            logger.error('Erreur update layer:', error);
+            throw new AppError('Erreur lors de la mise à jour de la couche', 500);
+        }
+    }
+
+    async delete(id) {
+        try {
+            // Vérifier que la couche existe
+            await this.findById(id);
+
+            // Vérifier qu'elle n'a pas de features
+            const featureCount = await Layer.getFeatureCount(id);
+            if (featureCount > 0) {
+                throw new AppError(
+                    `Impossible de supprimer: ${featureCount} entités liées`,
+                    400
+                );
+            }
+
+            await Layer.delete(id);
+
+            // Invalider le cache
+            layerCache.delete(`layer:${id}`);
+            layerCache.flush();
+
+            logger.info(`✅ Couche supprimée: ID ${id}`);
+            return { id, deleted: true };
+        } catch (error) {
+            if (error instanceof AppError) throw error;
+            logger.error('Erreur delete layer:', error);
+            throw new AppError('Erreur lors de la suppression de la couche', 500);
+        }
+    }
+
+    async getLayerWithFeatures(id, bbox = null, year = null) {
+        try {
+            const layer = await this.findById(id);
+
+            // Récupérer les features
+            const GeoService = require('./geoService');
+            const features = await GeoService.getFeaturesInBbox(
+                bbox || [-180, -90, 180, 90],
+                year,
+                id
+            );
+
+            return {
+                ...layer,
+                features
+            };
+        } catch (error) {
+            if (error instanceof AppError) throw error;
+            logger.error('Erreur getLayerWithFeatures:', error);
+            throw new AppError('Erreur lors de la récupération des données', 500);
+        }
+    }
+}
+
+module.exports = new LayerService();
