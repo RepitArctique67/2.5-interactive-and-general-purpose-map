@@ -1,0 +1,125 @@
+{
+    "dataSources": {
+        "openstreetmap": {
+            "name": "OpenStreetMap",
+            "type": "vector",
+            "enabled": true,
+            "apiEndpoint": "https://overpass-api.de/api/interpreter",
+            "rateLimit": {
+                "requestsPerMinute": 2,
+                "maxRetries": 3
+            },
+            "updateFrequency": "weekly",
+            "description": "Collaborative mapping project providing free geographic data",
+            "attribution": "© OpenStreetMap contributors"
+        },
+        "nasa": {
+            "name": "NASA Earth Observatory",
+            "type": "imagery",
+            "enabled": false,
+            "apiEndpoint": "https://api.nasa.gov",
+            "apiKeyRequired": true,
+            "apiKeyEnvVar": "NASA_API_KEY",
+            "rateLimit": {
+                "requestsPerHour": 1000,
+                "maxRetries": 3
+            },
+            "updateFrequency": "daily",
+            "description": "NASA Earth imagery and natural events data",
+            "attribution": "NASA Earth Observatory"
+        },
+        "noaa": {
+            "name": "NOAA Climate Data",
+            "type": "climate",
+            "enabled": false,
+            "apiEndpoint": "https://www.ncdc.noaa.gov/cdo-web/api/v2",
+            "apiKeyRequired": true,
+            "apiKeyEnvVar": "NOAA_API_KEY",
+            "rateLimit": {
+                "requestsPerSecond": 5,
+                "maxRetries": 3
+            },
+            "updateFrequency": "monthly",
+            "description": "Historical weather and climate data",
+            "attribution": "NOAA National Centers for Environmental Information"
+        },
+        "naturalearth": {
+            "name": "Natural Earth",
+            "type": "vector",
+            "enabled": true,
+            "downloadUrl": "https://www.naturalearthdata.com/downloads",
+            "rateLimit": {
+                "requestsPerMinute": 10,
+                "maxRetries": 3
+            },
+            "updateFrequency": "quarterly",
+            "description": "Public domain map dataset for cartography",
+            "attribution": "Natural Earth"
+        },
+        "historicalMaps": {
+            "name": "Historical Maps",
+            "type": "raster",
+            "enabled": true,
+            "uploadBased": true,
+            "supportedFormats": [
+                "tiff",
+                "geotiff",
+                "png",
+                "jpeg",
+                "jpg"
+            ],
+            "maxFileSize": "100MB",
+            "description": "User-uploaded historical maps for digitization",
+            "attribution": "Various sources"
+        }
+    },
+    "processingDefaults": {
+        "coordinateSystem": "EPSG:4326",
+        "simplificationTolerance": 0.0001,
+        "maxFeatureSize": "10MB",
+        "batchSize": 1000,
+        "timeout": 300000
+    },
+    "aiModels": {
+        "imageRecognition": {
+            "enabled": true,
+            "modelType": "tensorflow",
+            "modelPath": "./ai/models/mobilenet",
+            "confidenceThreshold": 0.7
+        },
+        "featureClassification": {
+            "enabled": true,
+            "modelType": "tensorflow",
+            "modelPath": "./ai/models/classifier",
+            "confidenceThreshold": 0.8
+        },
+        "nlpSearch": {
+            "enabled": true,
+            "provider": "local",
+            "fallbackToOpenAI": false,
+            "openAIKeyEnvVar": "OPENAI_API_KEY"
+        }
+    },
+    "scheduledJobs": {
+        "dataUpdater": {
+            "enabled": true,
+            "schedule": "0 2 * * *",
+            "description": "Daily data updates at 2 AM"
+        },
+        "cacheWarmer": {
+            "enabled": true,
+            "schedule": "0 3 * * *",
+            "description": "Cache warming at 3 AM"
+        },
+        "qualityChecker": {
+            "enabled": true,
+            "schedule": "0 4 * * 0",
+            "description": "Weekly quality checks on Sunday at 4 AM"
+        },
+        "reportGenerator": {
+            "enabled": true,
+            "schedule": "0 5 * * 1",
+            "description": "Weekly reports on Monday at 5 AM"
+        }
+    }
+}

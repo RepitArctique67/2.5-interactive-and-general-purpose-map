@@ -4,6 +4,69 @@ const { layerCache } = require('../utils/cache');
 const logger = require('../utils/logger');
 
 class LayerService {
+    // Sample layers for demo (when DB not connected)
+    getSampleLayers() {
+        return [
+            {
+                id: 1,
+                name: 'OpenStreetMap',
+                type: 'base',
+                category: 'cartographic',
+                description: 'Carte de base collaborative OpenStreetMap',
+                is_active: true,
+                is_historical: false,
+                opacity: 1.0,
+                config: {
+                    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    attribution: '© OpenStreetMap contributors'
+                }
+            },
+            {
+                id: 2,
+                name: 'Terrain 3D',
+                type: 'terrain',
+                category: 'topographic',
+                description: 'Relief terrestre en 3D',
+                is_active: true,
+                is_historical: false,
+                opacity: 1.0,
+                config: {
+                    provider: 'cesium-world-terrain'
+                }
+            },
+            {
+                id: 3,
+                name: 'Frontières Historiques',
+                type: 'data',
+                category: 'administrative',
+                description: 'Évolution des frontières à travers le temps',
+                is_active: false,
+                is_historical: true,
+                min_year: 1900,
+                max_year: 2025,
+                opacity: 0.7,
+                config: {
+                    color: '#FF6B6B',
+                    lineWidth: 2
+                }
+            },
+            {
+                id: 4,
+                name: 'Villes Principales',
+                type: 'data',
+                category: 'cities',
+                description: 'Grandes villes du monde',
+                is_active: false,
+                is_historical: false,
+                opacity: 0.8,
+                config: {
+                    markerColor: '#4ECDC4',
+                    markerSize: 8
+                }
+            }
+        ];
+    }
+
     async findAll(filters = {}) {
         try {
             const cacheKey = `layers:${JSON.stringify(filters)}`;
@@ -11,9 +74,31 @@ class LayerService {
             return await layerCache.wrap(
                 cacheKey,
                 async () => {
-                    const layers = await Layer.findAll(filters);
-                    logger.info(`✅ ${layers.length} couches récupérées`);
-                    return layers;
+                    try {
+                        const layers = await Layer.findAll(filters);
+                        logger.info(`✅ ${layers.length} couches récupérées`);
+                        return layers;
+                    } catch (dbError) {
+                        // Fallback to sample data if DB not available
+                        logger.warn('⚠️ Database not available, using sample data');
+                        let sampleLayers = this.getSampleLayers();
+
+                        // Apply filters to sample data
+                        if (filters.type) {
+                            sampleLayers = sampleLayers.filter(l => l.type === filters.type);
+                        }
+                        if (filters.category) {
+                            sampleLayers = sampleLayers.filter(l => l.category === filters.category);
+                        }
+                        if (filters.is_active !== undefined) {
+                            sampleLayers = sampleLayers.filter(l => l.is_active === filters.is_active);
+                        }
+                        if (filters.is_historical !== undefined) {
+                            sampleLayers = sampleLayers.filter(l => l.is_historical === filters.is_historical);
+                        }
+
+                        return sampleLayers;
+                    }
                 },
                 3600 // 1 heure
             );
