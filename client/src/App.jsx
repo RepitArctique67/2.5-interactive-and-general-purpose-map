@@ -1,13 +1,15 @@
+```
 import React from 'react';
-import { Viewer } from 'resium';
-import { Cartesian3 } from 'cesium';
+import Globe from './components/Globe/Globe';
+import './App.css';
 
 function App() {
   return (
-    <div className="w-full h-screen">
-      <Viewer full />
+    <div className="app-container">
+      <Globe />
     </div>
   );
 }
 
 export default App;
+```
