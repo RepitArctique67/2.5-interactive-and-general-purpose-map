@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { ScreenSpaceEventHandler, ScreenSpaceEventType, defined } from 'cesium';
+import { ScreenSpaceEventHandler, ScreenSpaceEventType, Color, Math as CesiumMath, Cartographic } from 'cesium';
 import {
     pickEntity,
     highlightEntity,
@@ -7,7 +7,6 @@ import {
     flyToLocation,
     trackEntity,
     loadGeoJsonLayer,
-    removeGeoJsonLayer,
     createCustomMarker,
 } from '../utils/cesiumHelpers';
 
@@ -56,7 +55,7 @@ export function useCesium(viewerRef, options = {}) {
                 if (entity) {
                     setSelectedEntity(entity);
                     highlightEntity(viewer, entity, {
-                        color: Cesium.Color.YELLOW,
+                        color: Color.YELLOW,
                         scale: 1.5,
                     });
 
@@ -99,7 +98,7 @@ export function useCesium(viewerRef, options = {}) {
                 if (entity && entity !== selectedEntity) {
                     setHoveredEntity(entity);
                     highlightEntity(viewer, entity, {
-                        color: Cesium.Color.CYAN,
+                        color: Color.CYAN,
                         scale: 1.2,
                     });
                     previousHoveredRef.current = entity;
@@ -123,8 +122,8 @@ export function useCesium(viewerRef, options = {}) {
         if (onCameraMove) {
             viewer.camera.moveEnd.addEventListener(() => {
                 const cameraPosition = {
-                    longitude: Cesium.Math.toDegrees(viewer.camera.positionCartographic.longitude),
-                    latitude: Cesium.Math.toDegrees(viewer.camera.positionCartographic.latitude),
+                    longitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.longitude),
+                    latitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.latitude),
                     height: viewer.camera.positionCartographic.height,
                 };
                 onCameraMove(cameraPosition);
@@ -137,7 +136,7 @@ export function useCesium(viewerRef, options = {}) {
                 handler.destroy();
             }
         };
-    }, [viewerRef, enableSelection, enableHover, enablePopups, onEntityClick, onEntityHover, onCameraMove]);
+    }, [viewerRef, enableSelection, enableHover, enablePopups, onEntityClick, onEntityHover, onCameraMove, selectedEntity]);
 
     /**
      * Select an entity programmatically
@@ -153,18 +152,18 @@ export function useCesium(viewerRef, options = {}) {
         if (entity) {
             setSelectedEntity(entity);
             highlightEntity(viewerRef.current, entity, {
-                color: Cesium.Color.YELLOW,
+                color: Color.YELLOW,
                 scale: 1.5,
             });
 
             // Fly to entity
             const position = entity.position?.getValue(viewerRef.current.clock.currentTime);
             if (position) {
-                const cartographic = Cesium.Cartographic.fromCartesian(position);
+                const cartographic = Cartographic.fromCartesian(position);
                 flyToLocation(
                     viewerRef.current,
-                    Cesium.Math.toDegrees(cartographic.longitude),
-                    Cesium.Math.toDegrees(cartographic.latitude),
+                    CesiumMath.toDegrees(cartographic.longitude),
+                    CesiumMath.toDegrees(cartographic.latitude),
                     100000,
                     2
                 );

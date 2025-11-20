@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 /**
  * Custom hook for managing timeline-based feature filtering and animations
@@ -21,7 +21,7 @@ export function useTimeline(features = [], config = {}) {
     const [currentYear, setCurrentYear] = useState(initialYear);
     const [isAnimating, setIsAnimating] = useState(false);
     const [animationDirection, setAnimationDirection] = useState('forward');
-    const animationIntervalRef = useState(null);
+    const animationIntervalRef = useRef(null);
 
     /**
      * Filter features based on current timeline year
