@@ -24,6 +24,11 @@ const PORT = process.env.PORT || 3001;
 // Sécurité
 app.use(helmet());
 
+// Sentry (Placeholder)
+// const Sentry = require('@sentry/node');
+// Sentry.init({ dsn: process.env.SENTRY_DSN });
+// app.use(Sentry.Handlers.requestHandler());
+
 // CORS
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -66,6 +71,9 @@ app.use((req, res) => {
     error: 'Route non trouvée'
   });
 });
+
+// Sentry Error Handler
+// app.use(Sentry.Handlers.errorHandler());
 
 // Error Handler
 app.use(errorHandler);

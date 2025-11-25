@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgis/postgis:15-3.3
+    build:
+      context: ./database
     container_name: cartographie_db
     environment:
       POSTGRES_DB: cartographie_db
@@ -12,6 +13,39 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ./server
+      target: dev
+    container_name: cartographie_server
+    environment:
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=cartographie_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  client:
+    build:
+      context: ./client
+      target: dev
+    container_name: cartographie_client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000
 
 volumes:
   postgres_data:
