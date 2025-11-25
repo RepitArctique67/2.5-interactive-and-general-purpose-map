@@ -3,15 +3,15 @@ import {
     Viewer,
     Cartesian3,
     Math as CesiumMath,
-    createWorldTerrain,
-    createOpenStreetMapImageryProvider,
+    Terrain,
+    UrlTemplateImageryProvider,
     IonImageryProvider,
     BingMapsImageryProvider,
     BingMapsStyle,
     Color,
     Ion,
 } from 'cesium';
-import "cesium/Build/Cesium/Widgets/widgets.css";
+// import "cesium/Build/Cesium/Widgets/widgets.css";
 import useCesium from '../../hooks/useCesium';
 import { setupLODSystem, createPerformanceMonitor, updateLOD } from '../../utils/performanceUtils';
 import { resetCamera } from '../../utils/cesiumHelpers';
@@ -123,7 +123,7 @@ const Globe = forwardRef((props, ref) => {
 
             // Configure terrain provider
             if (terrainProvider === 'cesium-world-terrain' && cesiumToken) {
-                viewer.terrainProvider = createWorldTerrain({
+                viewer.terrain = Terrain.fromWorldTerrain({
                     requestWaterMask: true,
                     requestVertexNormals: true,
                 });
@@ -314,8 +314,9 @@ function configureImageryProvider(viewer, providerType) {
     switch (providerType) {
         case 'osm':
             viewer.imageryLayers.addImageryProvider(
-                createOpenStreetMapImageryProvider({
-                    url: 'https://a.tile.openstreetmap.org/',
+                new UrlTemplateImageryProvider({
+                    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c'],
                 })
             );
             break;
@@ -345,8 +346,9 @@ function configureImageryProvider(viewer, providerType) {
         default:
             // Default to OSM
             viewer.imageryLayers.addImageryProvider(
-                createOpenStreetMapImageryProvider({
-                    url: 'https://a.tile.openstreetmap.org/',
+                new UrlTemplateImageryProvider({
+                    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c'],
                 })
             );
     }

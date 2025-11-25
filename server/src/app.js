@@ -8,11 +8,13 @@ const { errorHandler } = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 
 // Routes
+console.log('Loading routes...');
 const layerRoutes = require('./routes/layers');
 const dataRoutes = require('./routes/data');
 const timelineRoutes = require('./routes/timeline');
 const authRoutes = require('./routes/auth');
 const searchRoutes = require('./routes/search');
+console.log('Routes loaded.');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -83,11 +85,14 @@ app.use(errorHandler);
 // ==========================================
 
 if (require.main === module) {
+  console.log('Starting server on port:', PORT);
   app.listen(PORT, () => {
     logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
     logger.info(`📍 Environnement: ${process.env.NODE_ENV}`);
     logger.info(`🌍 API disponible sur: http://localhost:${PORT}/api/v1`);
   });
+} else {
+  console.log('Not running as main module');
 }
 
 module.exports = app;

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Globe from './components/Globe/Globe';
+// import Globe from './components/Globe/Globe';
+const Globe = React.lazy(() => import('./components/Globe/Globe'));
 import LayerPanel from './components/LayerPanel/LayerPanel';
 import Timeline from './components/Timeline/Timeline';
 import useLayers from './hooks/useLayers';
@@ -16,24 +17,59 @@ const queryClient = new QueryClient({
   },
 });
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ error, errorInfo });
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, background: 'red', color: 'white' }}>
+          <h1>Something went wrong.</h1>
+          <details style={{ whiteSpace: 'pre-wrap' }}>
+            {this.state.error && this.state.error.toString()}
+            <br />
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
+          </details>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function AppContent() {
   const [currentYear, setCurrentYear] = useState(2025);
   const { layers, isLoading, error } = useLayers();
 
   const handleLayerToggle = (layerId) => {
     console.log('Toggle layer:', layerId);
-    // TODO: Implement layer toggle logic with Cesium
   };
 
   const handleYearChange = (year) => {
     setCurrentYear(year);
     console.log('Year changed to:', year);
-    // TODO: Update layers based on year
   };
 
   return (
     <div className="app-container">
-      <Globe />
+      <ErrorBoundary>
+        <Suspense fallback={<div className="loading-overlay">Loading 3D Globe...</div>}>
+          <Globe />
+        </Suspense>
+      </ErrorBoundary>
       <LayerPanel
         layers={layers}
         onLayerToggle={handleLayerToggle}

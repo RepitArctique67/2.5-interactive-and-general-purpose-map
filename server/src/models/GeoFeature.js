@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/sequelize');
 
+const isSqlite = process.env.DB_DIALECT === 'sqlite';
+
 /**
  * GeoFeature Model
  * Represents geospatial features with PostGIS geometry support
@@ -33,7 +35,7 @@ const GeoFeature = sequelize.define('GeoFeature', {
         },
     },
     geometry: {
-        type: DataTypes.GEOMETRY('GEOMETRY', 4326),
+        type: isSqlite ? DataTypes.JSON : DataTypes.GEOMETRY('GEOMETRY', 4326),
         allowNull: false,
     },
     properties: {
@@ -54,7 +56,20 @@ const GeoFeature = sequelize.define('GeoFeature', {
 }, {
     tableName: 'geo_features',
     timestamps: true,
-    indexes: [
+    indexes: isSqlite ? [
+        {
+            name: 'idx_geo_features_layer',
+            fields: ['layer_id'],
+        },
+        {
+            name: 'idx_geo_features_dates',
+            fields: ['valid_from', 'valid_to'],
+        },
+        {
+            name: 'idx_geo_features_type',
+            fields: ['type'],
+        },
+    ] : [
         {
             name: 'idx_geo_features_geometry',
             fields: ['geometry'],
@@ -141,6 +156,33 @@ GeoFeature.addScope('validAt', (date) => ({
 GeoFeature.findInBbox = async function (bbox, options = {}) {
     const { layerId, year, type } = options;
 
+    if (isSqlite) {
+        // SQLite fallback: Return all features for the layer (no spatial filtering)
+        // or implement a simple bounding box check in JS if needed.
+        // For demo purposes, we'll just return features filtered by non-spatial attributes.
+        const where = {};
+        if (layerId) where.layerId = layerId;
+        if (type) where.type = type;
+
+        // Add temporal filter if year provided
+        if (year) {
+            const yearDate = new Date(`${year}-01-01`);
+            where[sequelize.Sequelize.Op.or] = [
+                { validFrom: null },
+                { validFrom: { [sequelize.Sequelize.Op.lte]: yearDate } },
+            ];
+            where[sequelize.Sequelize.Op.and] = [
+                {
+                    [sequelize.Sequelize.Op.or]: [
+                        { validTo: null },
+                        { validTo: { [sequelize.Sequelize.Op.gte]: yearDate } },
+                    ],
+                },
+            ];
+        }
+        return await this.findAll({ where });
+    }
+
     const where = {
         geometry: sequelize.fn(
             'ST_Intersects',
@@ -178,6 +220,11 @@ GeoFeature.findInBbox = async function (bbox, options = {}) {
 
 GeoFeature.findNearPoint = async function (lon, lat, radiusMeters, options = {}) {
     const { layerId, year, limit = 50 } = options;
+
+    if (isSqlite) {
+        // SQLite fallback: Return empty or simple list
+        return [];
+    }
 
     const where = {
         geometry: sequelize.fn(
