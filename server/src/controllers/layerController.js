@@ -1,6 +1,26 @@
 const layerService = require('../services/layerService');
 const { AppError } = require('../middleware/errorHandler');
 
+// Helper to map snake_case API input to camelCase model attributes
+const mapLayerData = (data) => {
+    const mapped = {};
+    if (data.name !== undefined) mapped.name = data.name;
+    if (data.type !== undefined) mapped.type = data.type;
+    if (data.category !== undefined) mapped.category = data.category;
+    if (data.description !== undefined) mapped.description = data.description;
+    if (data.source_url !== undefined) mapped.sourceUrl = data.source_url;
+    if (data.is_active !== undefined) mapped.isActive = data.is_active;
+    if (data.is_historical !== undefined) mapped.isHistorical = data.is_historical;
+    if (data.min_year !== undefined) mapped.minYear = data.min_year;
+    if (data.max_year !== undefined) mapped.maxYear = data.max_year;
+    if (data.zoom_min !== undefined) mapped.zoomMin = data.zoom_min;
+    if (data.zoom_max !== undefined) mapped.zoomMax = data.zoom_max;
+    if (data.opacity !== undefined) mapped.opacity = data.opacity;
+    if (data.config !== undefined) mapped.config = data.config;
+    if (data.metadata !== undefined) mapped.metadata = data.metadata;
+    return mapped;
+};
+
 const layerController = {
     /**
      * GET /api/v1/layers
@@ -56,7 +76,8 @@ const layerController = {
      */
     async create(req, res, next) {
         try {
-            const layer = await layerService.create(req.body);
+            const layerData = mapLayerData(req.body);
+            const layer = await layerService.create(layerData);
 
             res.status(201).json({
                 success: true,
@@ -75,7 +96,8 @@ const layerController = {
     async update(req, res, next) {
         try {
             const { id } = req.params;
-            const layer = await layerService.update(id, req.body);
+            const layerData = mapLayerData(req.body);
+            const layer = await layerService.update(id, layerData);
 
             res.json({
                 success: true,

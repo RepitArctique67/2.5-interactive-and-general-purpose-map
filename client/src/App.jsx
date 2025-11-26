@@ -1,10 +1,12 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import Globe from './components/Globe/Globe';
 const Globe = React.lazy(() => import('./components/Globe/Globe'));
 import LayerPanel from './components/LayerPanel/LayerPanel';
 import Timeline from './components/Timeline/Timeline';
 import useLayers from './hooks/useLayers';
+import useLayerData from './hooks/useLayerData';
+import { trackEvent, trackPageView, trackError } from './utils/analytics';
 import './App.css';
 
 // Create a client
@@ -23,13 +25,14 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
     this.setState({ error, errorInfo });
     console.error("Uncaught error:", error, errorInfo);
+    trackError(error.toString(), true);
   }
 
   render() {
@@ -52,29 +55,100 @@ class ErrorBoundary extends React.Component {
 
 function AppContent() {
   const [currentYear, setCurrentYear] = useState(2025);
-  const { layers, isLoading, error } = useLayers();
+  const [activeLayerIds, setActiveLayerIds] = useState([]);
+
+  // Fetch all layers metadata
+  const { layers: allLayers, isLoading: layersLoading, error: layersError } = useLayers();
+
+  useEffect(() => {
+    trackPageView('/');
+  }, []);
+
+  const initializedRef = useRef(false);
+
+  // Initialize active layers from metadata defaults
+  useEffect(() => {
+    if (!initializedRef.current && allLayers && allLayers.length > 0) {
+      // Only set initial active state once
+      const initialActive = allLayers.filter(l => l.is_active).map(l => l.id);
+      if (initialActive.length > 0) {
+        setActiveLayerIds(initialActive);
+      }
+      initializedRef.current = true;
+    }
+  }, [allLayers]);
+
+  // Fetch data for active layers
+  const { layerData } = useLayerData(allLayers, activeLayerIds, currentYear);
+
+  // Prepare layers for Globe (merging metadata, active state, and fetched data)
+  const globeLayers = useMemo(() => {
+    if (!allLayers) return [];
+    return allLayers.map(layer => {
+      const data = layerData.find(d => d.id === layer.id);
+      const isActive = activeLayerIds.includes(layer.id);
+      return {
+        ...layer,
+        visible: isActive,
+        geojsonData: data ? data.geojsonData : null,
+        // Pass styling options if they exist in config
+        strokeColor: layer.config?.strokeColor,
+        fillColor: layer.config?.fillColor,
+      };
+    });
+  }, [allLayers, layerData, activeLayerIds]);
+
+  // Prepare layers for Panel (updating is_active status)
+  const panelLayers = useMemo(() => {
+    if (!allLayers) return [];
+    return allLayers.map(layer => ({
+      ...layer,
+      is_active: activeLayerIds.includes(layer.id)
+    }));
+  }, [allLayers, activeLayerIds]);
 
   const handleLayerToggle = (layerId) => {
     console.log('Toggle layer:', layerId);
+    trackEvent('Layer', 'Toggle', `Layer ${layerId}`);
+    setActiveLayerIds(prev => {
+      if (prev.includes(layerId)) {
+        return prev.filter(id => id !== layerId);
+      } else {
+        return [...prev, layerId];
+      }
+    });
   };
 
   const handleYearChange = (year) => {
     setCurrentYear(year);
     console.log('Year changed to:', year);
+    trackEvent('Timeline', 'Change Year', `${year}`);
+  };
+
+  // Handle entity interactions
+  const handleEntityClick = (entity) => {
+    console.log('Clicked entity:', entity);
+    trackEvent('Globe', 'Click Entity', entity.name || 'Unknown');
   };
 
   return (
     <div className="app-container">
       <ErrorBoundary>
         <Suspense fallback={<div className="loading-overlay">Loading 3D Globe...</div>}>
-          <Globe />
+          <Globe
+            layers={globeLayers}
+            currentYear={currentYear}
+            onEntityClick={handleEntityClick}
+            enableLighting={true}
+            enableShadows={true}
+          />
         </Suspense>
       </ErrorBoundary>
       <LayerPanel
-        layers={layers}
+        layers={panelLayers}
         onLayerToggle={handleLayerToggle}
-        isLoading={isLoading}
-        error={error}
+        isLoading={layersLoading}
+        error={layersError}
       />
       <Timeline
         currentYear={currentYear}

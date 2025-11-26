@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import useTimelineStore from '../store/timelineStore';
 
 /**
  * Custom hook for managing timeline-based feature filtering and animations
@@ -8,18 +9,25 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
  */
 export function useTimeline(features = [], config = {}) {
     const {
-        initialYear = new Date().getFullYear(),
-        minYear = 1900,
-        maxYear = new Date().getFullYear(),
         dateField = 'year',
         startDateField = 'startYear',
         endDateField = 'endYear',
-        animationSpeed = 1000, // ms per year
         interpolate = false,
+        enablePlayback = false, // Only the main Timeline component should enable this
     } = config;
 
-    const [currentYear, setCurrentYear] = useState(initialYear);
-    const [isAnimating, setIsAnimating] = useState(false);
+    // Global State from Store
+    const currentYear = useTimelineStore(state => state.currentYear);
+    const minYear = useTimelineStore(state => state.minYear);
+    const maxYear = useTimelineStore(state => state.maxYear);
+    const isPlaying = useTimelineStore(state => state.isPlaying);
+    const animationSpeed = useTimelineStore(state => state.playbackSpeed);
+
+    const setCurrentYear = useTimelineStore(state => state.setCurrentYear);
+    const setPlaying = useTimelineStore(state => state.setPlaying);
+    const stepYear = useTimelineStore(state => state.stepYear);
+
+    // Local state for animation direction (could be in store, but fine here for now)
     const [animationDirection, setAnimationDirection] = useState('forward');
     const animationIntervalRef = useRef(null);
 
@@ -164,82 +172,60 @@ export function useTimeline(features = [], config = {}) {
     }, [filteredFeatures, currentYear, interpolate, interpolateData]);
 
     /**
+     * Animation Effect
+     * Only runs if enablePlayback is true (to avoid multiple drivers)
+     */
+    useEffect(() => {
+        if (!enablePlayback) return;
+
+        if (isPlaying) {
+            animationIntervalRef.current = setInterval(() => {
+                stepYear(animationDirection === 'forward' ? 1 : -1);
+            }, animationSpeed);
+        } else {
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
+            }
+        }
+
+        return () => {
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+            }
+        };
+    }, [isPlaying, animationSpeed, animationDirection, enablePlayback, stepYear]);
+
+    /**
      * Start timeline animation
      */
-    const animateTimeline = useCallback((direction = 'forward', speed = animationSpeed) => {
-        if (isAnimating) return;
-
-        setIsAnimating(true);
+    const animateTimeline = useCallback((direction = 'forward') => {
         setAnimationDirection(direction);
-
-        const interval = setInterval(() => {
-            setCurrentYear(prevYear => {
-                let nextYear;
-
-                if (direction === 'forward') {
-                    nextYear = prevYear + 1;
-                    if (nextYear > maxYear) {
-                        clearInterval(interval);
-                        setIsAnimating(false);
-                        return maxYear;
-                    }
-                } else {
-                    nextYear = prevYear - 1;
-                    if (nextYear < minYear) {
-                        clearInterval(interval);
-                        setIsAnimating(false);
-                        return minYear;
-                    }
-                }
-
-                return nextYear;
-            });
-        }, speed);
-
-        animationIntervalRef.current = interval;
-    }, [isAnimating, minYear, maxYear, animationSpeed]);
+        setPlaying(true);
+    }, [setPlaying]);
 
     /**
      * Stop timeline animation
      */
     const stopAnimation = useCallback(() => {
-        if (animationIntervalRef.current) {
-            clearInterval(animationIntervalRef.current);
-            animationIntervalRef.current = null;
-        }
-        setIsAnimating(false);
-    }, []);
+        setPlaying(false);
+    }, [setPlaying]);
 
     /**
      * Jump to a specific year
      */
     const jumpToYear = useCallback((year) => {
         stopAnimation();
-        const clampedYear = Math.max(minYear, Math.min(maxYear, year));
-        setCurrentYear(clampedYear);
-    }, [minYear, maxYear, stopAnimation]);
-
-    /**
-     * Step forward one year
-     */
-    const stepForward = useCallback(() => {
-        setCurrentYear(prev => Math.min(prev + 1, maxYear));
-    }, [maxYear]);
-
-    /**
-     * Step backward one year
-     */
-    const stepBackward = useCallback(() => {
-        setCurrentYear(prev => Math.max(prev - 1, minYear));
-    }, [minYear]);
+        setCurrentYear(year);
+    }, [setCurrentYear, stopAnimation]);
 
     /**
      * Reset to initial year
      */
     const reset = useCallback(() => {
         stopAnimation();
-        setCurrentYear(initialYear);
-    }, [initialYear, stopAnimation]);
+        setCurrentYear(minYear); // Or initialYear if we store it
+    }, [minYear, setCurrentYear, stopAnimation]);
 
     /**
      * Get timeline statistics
@@ -304,27 +290,18 @@ export function useTimeline(features = [], config = {}) {
         return timeLapseData;
     }, [minYear, maxYear, getFeaturesAtYear]);
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            if (animationIntervalRef.current) {
-                clearInterval(animationIntervalRef.current);
-            }
-        };
-    }, []);
-
     return {
         // State
         currentYear,
-        isAnimating,
+        isPlaying,
         animationDirection,
         filteredFeatures,
         interpolatedFeatures,
 
         // Year control
         setCurrentYear: jumpToYear,
-        stepForward,
-        stepBackward,
+        stepForward: () => stepYear(1),
+        stepBackward: () => stepYear(-1),
         reset,
 
         // Animation control

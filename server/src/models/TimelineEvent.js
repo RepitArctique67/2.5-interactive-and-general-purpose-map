@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/sequelize');
 
+const isSqlite = process.env.DB_DIALECT === 'sqlite';
+
 /**
  * TimelineEvent Model
  * Represents historical events with temporal and spatial information
@@ -40,7 +42,7 @@ const TimelineEvent = sequelize.define('TimelineEvent', {
         },
     },
     location: {
-        type: DataTypes.GEOMETRY('POINT', 4326),
+        type: isSqlite ? DataTypes.JSON : DataTypes.GEOMETRY('POINT', 4326),
         allowNull: true,
     },
     relatedLayerId: {
@@ -86,7 +88,20 @@ const TimelineEvent = sequelize.define('TimelineEvent', {
 }, {
     tableName: 'timeline_events',
     timestamps: true,
-    indexes: [
+    indexes: isSqlite ? [
+        {
+            name: 'idx_timeline_date',
+            fields: ['event_date'],
+        },
+        {
+            name: 'idx_timeline_type',
+            fields: ['event_type'],
+        },
+        {
+            name: 'idx_timeline_importance',
+            fields: [{ name: 'importance', order: 'DESC' }],
+        },
+    ] : [
         {
             name: 'idx_timeline_location',
             fields: ['location'],
@@ -120,7 +135,7 @@ TimelineEvent.prototype.toJSON = function () {
     values.year = this.year();
 
     // Format location as GeoJSON if present
-    if (values.location) {
+    if (values.location && !isSqlite) {
         values.location = {
             type: 'Point',
             coordinates: values.location.coordinates,
@@ -143,12 +158,23 @@ TimelineEvent.addScope('byType', (type) => ({
     where: { eventType: type },
 }));
 
-TimelineEvent.addScope('inYear', (year) => ({
-    where: sequelize.where(
-        sequelize.fn('EXTRACT', sequelize.literal('YEAR FROM event_date')),
-        year
-    ),
-}));
+TimelineEvent.addScope('inYear', (year) => {
+    if (isSqlite) {
+        return {
+            where: {
+                eventDate: {
+                    [sequelize.Sequelize.Op.like]: `${year}-%`
+                }
+            }
+        };
+    }
+    return {
+        where: sequelize.where(
+            sequelize.fn('EXTRACT', sequelize.literal('YEAR FROM event_date')),
+            year
+        ),
+    };
+});
 
 TimelineEvent.addScope('inDateRange', (startDate, endDate) => ({
     where: {
@@ -199,6 +225,23 @@ TimelineEvent.findInDateRange = async function (startDate, endDate, options = {}
 
 TimelineEvent.findNearLocation = async function (lon, lat, radiusMeters, options = {}) {
     const { startDate, endDate, type, limit = 50 } = options;
+
+    if (isSqlite) {
+        // SQLite fallback: Return events filtered by date/type only (no spatial)
+        const where = {};
+        if (startDate && endDate) {
+            where.eventDate = {
+                [sequelize.Sequelize.Op.between]: [startDate, endDate],
+            };
+        }
+        if (type) where.eventType = type;
+
+        return await this.findAll({
+            where,
+            order: [['importance', 'DESC']],
+            limit
+        });
+    }
 
     const where = {
         location: sequelize.fn(
