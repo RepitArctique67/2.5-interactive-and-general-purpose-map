@@ -1,3 +1,9 @@
+@import './styles/design-system.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html,
 body,
 #root {
@@ -6,4 +12,7 @@ body,
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--slate-950);
+    color: var(--slate-50);
 }

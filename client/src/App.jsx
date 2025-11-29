@@ -1,12 +1,14 @@
 import React, { useState, Suspense, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import Globe from './components/Globe/Globe';
-const Globe = React.lazy(() => import('./components/Globe/Globe'));
+import Globe from './components/Globe/Globe';
 import LayerPanel from './components/LayerPanel/LayerPanel';
 import Timeline from './components/Timeline/Timeline';
+import SearchBar from './components/SearchBar/SearchBar';
+import ToolsPanel from './components/Tools/ToolsPanel';
+import UserPanel from './components/UserPanel/UserPanel';
 import useLayers from './hooks/useLayers';
 import useLayerData from './hooks/useLayerData';
-import { trackEvent, trackPageView, trackError } from './utils/analytics';
+import { trackPageView, trackEvent, trackError } from './utils/analytics';
 import './App.css';
 
 // Create a client
@@ -131,8 +133,14 @@ function AppContent() {
     trackEvent('Globe', 'Click Entity', entity.name || 'Unknown');
   };
 
+  const handleLocationSelect = (location) => {
+    console.log('Location selected:', location);
+    // TODO: Fly to location on Globe
+    trackEvent('Search', 'Select Location', location.name);
+  };
+
   return (
-    <div className="app-container">
+    <div className="app-container relative">
       <ErrorBoundary>
         <Suspense fallback={<div className="loading-overlay">Loading 3D Globe...</div>}>
           <Globe
@@ -144,12 +152,21 @@ function AppContent() {
           />
         </Suspense>
       </ErrorBoundary>
+
+      {/* Top Bar */}
+      <SearchBar onLocationSelect={handleLocationSelect} />
+      <UserPanel />
+
+      {/* Side Panels */}
       <LayerPanel
         layers={panelLayers}
         onLayerToggle={handleLayerToggle}
         isLoading={layersLoading}
         error={layersError}
       />
+      <ToolsPanel />
+
+      {/* Bottom Controls */}
       <Timeline
         currentYear={currentYear}
         onYearChange={handleYearChange}

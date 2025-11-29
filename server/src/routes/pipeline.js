@@ -5,7 +5,7 @@ const auth = require('../middleware/auth');
 
 // Protect all pipeline routes with auth middleware
 // In a real app, we'd check for admin role
-router.use(auth);
+router.use(auth.authenticate);
 
 router.post('/import/:source', pipelineController.triggerImport);
 router.get('/status/:jobId', pipelineController.getJobStatus);

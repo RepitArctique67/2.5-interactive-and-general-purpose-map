@@ -1,0 +1,14 @@
+.user-panel-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .user-panel-container {
+        top: 20px;
+        right: 20px;
+    }
+}

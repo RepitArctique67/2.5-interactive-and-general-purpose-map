@@ -24,6 +24,18 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+    },
+  },
+  {
+    files: ['**/*.test.{js,jsx}', 'setupTests.js'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
     },
   },
 ])

@@ -1,40 +1,51 @@
-import api from './api';
+import axios from 'axios';
 
-export const authService = {
-    /**
-     * Login user
-     * @param {string} email 
-     * @param {string} password 
-     * @returns {Promise<Object>} { user, token }
-     */
-    async login(email, password) {
-        return api.post('/auth/login', { email, password });
+// Mock API delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const authService = {
+    login: async (email, password) => {
+        await delay(1000); // Simulate API call
+
+        // Mock validation
+        if (email === 'demo@example.com' && password === 'password') {
+            const user = {
+                id: '1',
+                name: 'Demo User',
+                email: 'demo@example.com',
+                avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=fff',
+                role: 'user'
+            };
+            localStorage.setItem('user', JSON.stringify(user));
+            return user;
+        }
+
+        throw new Error('Invalid credentials');
     },
 
-    /**
-     * Register new user
-     * @param {Object} userData 
-     * @returns {Promise<Object>} { user, token }
-     */
-    async register(userData) {
-        return api.post('/auth/register', userData);
+    register: async (data) => {
+        await delay(1000);
+
+        const user = {
+            id: Math.random().toString(36).substr(2, 9),
+            name: data.name,
+            email: data.email,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=3b82f6&color=fff`,
+            role: 'user'
+        };
+
+        localStorage.setItem('user', JSON.stringify(user));
+        return user;
     },
 
-    /**
-     * Get current user profile
-     * @returns {Promise<Object>} User object
-     */
-    async getProfile() {
-        return api.get('/auth/me');
+    logout: () => {
+        localStorage.removeItem('user');
     },
 
-    /**
-     * Update user profile
-     * @param {Object} data 
-     * @returns {Promise<Object>} Updated user object
-     */
-    async updateProfile(data) {
-        return api.put('/auth/me', data);
+    getCurrentUser: () => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) return JSON.parse(userStr);
+        return null;
     }
 };
 

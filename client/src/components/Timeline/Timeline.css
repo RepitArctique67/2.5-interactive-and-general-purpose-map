@@ -1,165 +1,37 @@
 .timeline-container {
     position: absolute;
-    bottom: 20px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
+    width: 90%;
+    max-width: 800px;
 }
 
 .timeline-content {
+    padding: 24px 32px;
+    border-radius: 24px;
     background: rgba(15, 23, 42, 0.85);
-    -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
-    border-radius: 16px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    border: 1px solid rgba(148, 163, 184, 0.15);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    padding: 20px 32px;
-    min-width: 500px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .timeline-content:hover {
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
     border-color: rgba(148, 163, 184, 0.3);
-}
-
-.timeline-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    justify-content: center;
-}
-
-.timeline-icon {
-    font-size: 18px;
-}
-
-.timeline-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #f1f5f9;
-}
-
-.timeline-year-display {
-    text-align: center;
-    margin-bottom: 16px;
-}
-
-.year-value {
-    font-size: 36px;
-    font-weight: 700;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
-}
-
-.timeline-slider-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.year-marker {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94a3b8;
-    min-width: 40px;
-    text-align: center;
-}
-
-.timeline-slider {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: rgba(148, 163, 184, 0.2);
-    border-radius: 3px;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.timeline-slider:hover {
-    background: rgba(148, 163, 184, 0.3);
-}
-
-/* Webkit (Chrome, Safari) */
-.timeline-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-
-.timeline-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-.timeline-slider::-webkit-slider-thumb:active {
-    transform: scale(1.1);
-}
-
-/* Firefox */
-.timeline-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-
-.timeline-slider::-moz-range-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-.timeline-slider::-moz-range-thumb:active {
-    transform: scale(1.1);
-}
-
-/* Track progress fill */
-.timeline-slider::-webkit-slider-runnable-track {
-    height: 6px;
-    background: linear-gradient(to right,
-            rgba(59, 130, 246, 0.3) 0%,
-            rgba(59, 130, 246, 0.3) var(--progress, 50%),
-            rgba(148, 163, 184, 0.2) var(--progress, 50%),
-            rgba(148, 163, 184, 0.2) 100%);
-    border-radius: 3px;
-}
-
-.timeline-slider::-moz-range-track {
-    height: 6px;
-    background: rgba(148, 163, 184, 0.2);
-    border-radius: 3px;
-}
-
-.timeline-slider::-moz-range-progress {
-    height: 6px;
-    background: rgba(59, 130, 246, 0.3);
-    border-radius: 3px;
+    transform: translateY(-2px);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .timeline-content {
-        min-width: calc(100vw - 40px);
-        padding: 16px 24px;
+    .timeline-container {
+        width: 95%;
+        bottom: 20px;
     }
 
-    .year-value {
-        font-size: 28px;
+    .timeline-content {
+        padding: 16px 20px;
     }
 }

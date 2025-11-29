@@ -1,0 +1,18 @@
+.tools-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tools-container {
+        top: auto;
+        bottom: 140px;
+        right: 20px;
+    }
+}
