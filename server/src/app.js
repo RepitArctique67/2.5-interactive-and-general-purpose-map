@@ -14,6 +14,8 @@ const dataRoutes = require('./routes/data');
 const timelineRoutes = require('./routes/timeline');
 const authRoutes = require('./routes/auth');
 const searchRoutes = require('./routes/search');
+const pipelineRoutes = require('./routes/pipeline');
+const pipelineService = require('./services/pipelineService');
 console.log('Routes loaded.');
 
 const app = express();
@@ -65,6 +67,7 @@ app.use('/api/v1/data', dataRoutes);
 app.use('/api/v1/timeline', timelineRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/search', searchRoutes);
+app.use('/api/v1/pipeline', pipelineRoutes);
 
 // 404 Handler
 app.use((req, res) => {
@@ -90,6 +93,9 @@ if (require.main === module) {
     logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
     logger.info(`📍 Environnement: ${process.env.NODE_ENV}`);
     logger.info(`🌍 API disponible sur: http://localhost:${PORT}/api/v1`);
+
+    // Initialize pipeline
+    pipelineService.initialize();
   });
 } else {
   console.log('Not running as main module');
