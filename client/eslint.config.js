@@ -38,4 +38,22 @@ export default defineConfig([
       },
     },
   },
+  {
+    files: ['cypress/**/*.js', 'cypress.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.mocha,
+        cy: 'readonly',
+        Cypress: 'readonly',
+        expect: 'readonly',
+        assert: 'readonly',
+        chai: 'readonly'
+      },
+    },
+    rules: {
+      'no-unused-vars': 'off',
+      'no-undef': 'off'
+    }
+  },
 ])

@@ -8,6 +8,6 @@ describe('App', () => {
         renderWithProviders(<App />);
         // Check for something that should be always present, e.g., loading state or a known element
         // Since App has Suspense, it might show "Loading 3D Globe..." initially
-        expect(screen.getByText(/Loading 3D Globe.../i)).toBeInTheDocument();
+        expect(screen.getByText(/Loading Map.../i)).toBeInTheDocument();
     });
 });

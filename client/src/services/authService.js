@@ -1,51 +1,71 @@
-import axios from 'axios';
-
-// Mock API delay
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+import api from './api';
 
 const authService = {
+    /**
+     * Login user with email and password
+     * @param {string} email - User email
+     * @param {string} password - User password
+     * @returns {Promise<{token: string, user: object}>}
+     */
     login: async (email, password) => {
-        await delay(1000); // Simulate API call
-
-        // Mock validation
-        if (email === 'demo@example.com' && password === 'password') {
-            const user = {
-                id: '1',
-                name: 'Demo User',
-                email: 'demo@example.com',
-                avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=fff',
-                role: 'user'
-            };
-            localStorage.setItem('user', JSON.stringify(user));
-            return user;
-        }
-
-        throw new Error('Invalid credentials');
+        const response = await api.post('/auth/login', { email, password });
+        return response.data; // {success: true, token, user}
     },
 
+    /**
+     * Register new user
+     * @param {object} data - User registration data
+     * @returns {Promise<{token: string, user: object}>}
+     */
     register: async (data) => {
-        await delay(1000);
-
-        const user = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: data.name,
-            email: data.email,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=3b82f6&color=fff`,
-            role: 'user'
-        };
-
-        localStorage.setItem('user', JSON.stringify(user));
-        return user;
+        const { name, email, password } = data;
+        const response = await api.post('/auth/register', {
+            username: name, // Backend expects 'username'
+            email,
+            password
+        });
+        return response.data; // {success: true, token, user}
     },
 
+    /**
+     * Get current user profile
+     * @returns {Promise<object>}
+     */
+    getProfile: async () => {
+        const response = await api.get('/auth/me');
+        return response.data; // {success: true, data: user}
+    },
+
+    /**
+     * Update user profile
+     * @param {object} updates - Profile updates
+     * @returns {Promise<object>}
+     */
+    updateProfile: async (updates) => {
+        const response = await api.put('/auth/profile', updates);
+        return response.data; // {success: true, data: user}
+    },
+
+    /**
+     * Change password
+     * @param {string} currentPassword - Current password
+     * @param {string} newPassword - New password
+     * @returns {Promise<void>}
+     */
+    changePassword: async (currentPassword, newPassword) => {
+        const response = await api.put('/auth/password', {
+            currentPassword,
+            newPassword
+        });
+        return response.data;
+    },
+
+    /**
+     * Logout (client-side only, clears token from store)
+     */
     logout: () => {
-        localStorage.removeItem('user');
-    },
-
-    getCurrentUser: () => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) return JSON.parse(userStr);
-        return null;
+        // Token is managed by userStore, just clear it there
+        // No server call needed for JWT since it's stateless
     }
 };
 

@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 // Import pipeline modules
 // Note: In a production environment, these might be separate microservices
 // For this monolith, we require them directly
-const pipelineRoot = path.join(__dirname, '../../../../data-pipeline');
+const pipelineRoot = path.join(__dirname, '../../../data-pipeline');
 const Scheduler = require(path.join(pipelineRoot, 'jobs/scheduler'));
 const OSMImporter = require(path.join(pipelineRoot, 'importers/osmImporter'));
 const config = require(path.join(pipelineRoot, 'config/sources.json'));

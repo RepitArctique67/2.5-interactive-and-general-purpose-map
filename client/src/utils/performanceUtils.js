@@ -129,7 +129,7 @@ export function createClusterSystem(viewer, points, options = {}) {
 
     // Add points to data source
     points.forEach(point => {
-        const entity = dataSource.entities.add({
+        dataSource.entities.add({
             position: Cartesian3.fromDegrees(point.longitude, point.latitude),
             point: {
                 pixelSize: 10,

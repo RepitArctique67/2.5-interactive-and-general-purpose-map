@@ -66,44 +66,44 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 
 ---
 
-### 🌍 **Agent 2: CesiumJS/3D Visualization Expert**
+### 🌍 **Agent 2: MapLibre/2D Visualization Expert**
 
-**Role**: Implement advanced 3D globe features and geospatial visualizations
+**Role**: Implement advanced 2D/2.5D map features and geospatial visualizations
 
 **Responsibilities**:
 
-- Integrate CesiumJS features and optimizations
-- Handle 3D rendering and performance
+- Integrate MapLibre GL JS features and optimizations
+- Handle map rendering and performance
 - Implement geospatial data visualization
-- Camera controls and animations
+- Map controls and interactions
 
 **Specific Tasks**:
 
-1. **Globe Enhancement**
-   - Implement terrain provider integration
-   - Add imagery layer switching
+1. **Map Enhancement**
+   - Implement vector tile sources (MVT)
+   - Add base map switching (Satellite, Streets, Dark)
    - Optimize rendering performance
-   - Implement camera flight animations
-   - File: `client/src/components/Globe/Globe.jsx`
+   - Implement camera/view animations (flyTo)
+   - File: `client/src/components/Map/Map.jsx`
 
 2. **Layer Visualization**
-   - Render GeoJSON features on globe
-   - Implement vector tile rendering
-   - Add 3D buildings/structures
+   - Render GeoJSON features on map
+   - Implement vector tile styling
+   - Add 2.5D building extrusions
    - Create heatmap visualizations
-   - File: `client/src/utils/cesiumHelpers.js`
+   - File: `client/src/utils/mapHelpers.js`
 
 3. **Interactive Features**
-   - Entity selection and highlighting
+   - Feature selection and highlighting
    - Popup/tooltip on feature click
-   - Camera tracking for selected features
+   - Viewport tracking for selected features
    - Custom markers and symbols
-   - File: `client/src/hooks/useCesium.js`
+   - File: `client/src/hooks/useMap.js`
 
 4. **Performance Optimization**
-   - Implement level-of-detail (LOD)
-   - Feature clustering for large datasets
-   - Lazy loading of tiles
+   - Implement source clustering
+   - Optimize tile loading
+   - Layer visibility management
    - Memory management
    - File: `client/src/utils/performanceUtils.js`
 
@@ -116,7 +116,7 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 
 **Technical Requirements**:
 
-- CesiumJS 1.135+
+- MapLibre GL JS 4.0+
 - WebGL optimization
 - GeoJSON/KML/GPX support
 - Coordinate system transformations
@@ -324,7 +324,7 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 
 4. **E2E Tests**
    - User journey tests
-   - Globe interaction tests
+   - Map interaction tests
    - Layer management flows
    - Timeline functionality
    - File: `client/cypress/e2e/`
@@ -570,14 +570,14 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 
 ### Phase 2: Core Features (Weeks 3-5)
 
-- **Agent 2**: Globe visualization and layer rendering
+- **Agent 2**: Map visualization and layer rendering
 - **Agent 1**: UI components (LayerPanel, Timeline)
 - **Agent 5**: State management and integration
 - **Agent 9**: Basic data importers
 
 ### Phase 3: Advanced Features (Weeks 6-8)
 
-- **Agent 2**: Advanced 3D features and animations
+- **Agent 2**: Advanced map features and animations
 - **Agent 1**: Search, Tools, and User panels
 - **Agent 3**: Search API and advanced queries
 - **Agent 9**: AI features and data enrichment
@@ -615,7 +615,7 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 
 ### Integration Points
 
-- **Agent 1 ↔ Agent 2**: UI components with Cesium integration
+- **Agent 1 ↔ Agent 2**: UI components with Map integration
 - **Agent 3 ↔ Agent 4**: API endpoints with database queries
 - **Agent 5 ↔ All Frontend**: State management integration
 - **Agent 6 ↔ All**: Testing requirements
@@ -626,7 +626,7 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 
 ## 📊 Success Metrics
 
-- **Performance**: Globe renders in <2s, API response <200ms
+- **Performance**: Map renders in <1s, API response <200ms
 - **Quality**: 80%+ test coverage, 0 critical bugs
 - **UX**: 90%+ user satisfaction, <5% bounce rate
 - **Scalability**: Handle 10k+ concurrent users
@@ -639,22 +639,22 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 ✅ **Completed**:
 
 - Basic project structure
-- Globe component with CesiumJS
 - LayerPanel and Timeline components
 - Backend API with sample data
 - Modern UI design system
 
 🚧 **In Progress**:
 
+- Migration from CesiumJS to MapLibre GL JS
 - Database integration
-- Layer visualization on globe
+- Layer visualization on map
 - Search functionality
 
 📋 **Pending**:
 
 - User authentication
 - Data import pipeline
-- Advanced 3D features
+- Advanced map features
 - Testing suite
 - Production deployment
 
@@ -665,7 +665,7 @@ A collaborative 2.5D interactive map platform for visualizing geospatial data ac
 | Agent | Primary Focus | Key Technologies |
 |-------|---------------|------------------|
 | Agent 1 | UI/UX | React, CSS, Tailwind, Animations |
-| Agent 2 | 3D Visualization | CesiumJS, WebGL, GeoJSON |
+| Agent 2 | 2D/2.5D Visualization | MapLibre GL JS, WebGL, GeoJSON |
 | Agent 3 | Backend API | Node.js, Express, REST |
 | Agent 4 | Database | PostgreSQL, PostGIS, SQL |
 | Agent 5 | State Management | Zustand, React Query, WebSocket |

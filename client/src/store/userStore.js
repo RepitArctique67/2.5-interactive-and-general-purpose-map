@@ -18,6 +18,12 @@ const useUserStore = create(
             },
 
             // Actions
+            login: (token, user) => set({
+                user,
+                token,
+                isAuthenticated: !!user
+            }),
+
             setUser: (user, token) => set({
                 user,
                 token,

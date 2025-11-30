@@ -1,6 +1,7 @@
 import React, { useState, Suspense, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Globe from './components/Globe/Globe';
+import MapView from './components/Map/Map';
+
 import LayerPanel from './components/LayerPanel/LayerPanel';
 import Timeline from './components/Timeline/Timeline';
 import SearchBar from './components/SearchBar/SearchBar';
@@ -74,7 +75,7 @@ function AppContent() {
       // Only set initial active state once
       const initialActive = allLayers.filter(l => l.is_active).map(l => l.id);
       if (initialActive.length > 0) {
-        setActiveLayerIds(initialActive);
+        setTimeout(() => setActiveLayerIds(initialActive), 0);
       }
       initializedRef.current = true;
     }
@@ -83,8 +84,8 @@ function AppContent() {
   // Fetch data for active layers
   const { layerData } = useLayerData(allLayers, activeLayerIds, currentYear);
 
-  // Prepare layers for Globe (merging metadata, active state, and fetched data)
-  const globeLayers = useMemo(() => {
+  // Prepare layers for Map (merging metadata, active state, and fetched data)
+  const mapLayers = useMemo(() => {
     if (!allLayers) return [];
     return allLayers.map(layer => {
       const data = layerData.find(d => d.id === layer.id);
@@ -127,34 +128,23 @@ function AppContent() {
     trackEvent('Timeline', 'Change Year', `${year}`);
   };
 
-  // Handle entity interactions
-  const handleEntityClick = (entity) => {
-    console.log('Clicked entity:', entity);
-    trackEvent('Globe', 'Click Entity', entity.name || 'Unknown');
-  };
 
-  const handleLocationSelect = (location) => {
-    console.log('Location selected:', location);
-    // TODO: Fly to location on Globe
-    trackEvent('Search', 'Select Location', location.name);
-  };
+
+
 
   return (
     <div className="app-container relative">
       <ErrorBoundary>
-        <Suspense fallback={<div className="loading-overlay">Loading 3D Globe...</div>}>
-          <Globe
-            layers={globeLayers}
-            currentYear={currentYear}
-            onEntityClick={handleEntityClick}
-            enableLighting={true}
-            enableShadows={true}
+        <Suspense fallback={<div className="loading-overlay">Loading Map...</div>}>
+          <MapView
+            layers={mapLayers}
+            isLoading={layersLoading}
           />
         </Suspense>
       </ErrorBoundary>
 
       {/* Top Bar */}
-      <SearchBar onLocationSelect={handleLocationSelect} />
+      <SearchBar />
       <UserPanel />
 
       {/* Side Panels */}

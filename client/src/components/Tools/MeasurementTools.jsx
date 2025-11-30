@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
 import { Ruler, BoxSelect, Trash2 } from 'lucide-react';
 import Button from '../shared/Button';
+import { useDraw } from '../../hooks/useDraw';
 
 const MeasurementTools = () => {
     const [mode, setMode] = useState(null); // 'distance', 'area'
-    const [measurements, setMeasurements] = useState([]);
+    const { changeMode, deleteAll, measurements } = useDraw();
+
+    const handleModeChange = (newMode) => {
+        if (mode === newMode) {
+            setMode(null);
+            changeMode('simple_select');
+        } else {
+            setMode(newMode);
+            if (newMode === 'distance') {
+                changeMode('draw_line_string');
+            } else if (newMode === 'area') {
+                changeMode('draw_polygon');
+            }
+        }
+    };
 
     const handleClear = () => {
-        setMeasurements([]);
+        deleteAll();
         setMode(null);
-        // TODO: Clear Cesium entities
+        changeMode('simple_select');
     };
 
     return (
@@ -17,7 +32,7 @@ const MeasurementTools = () => {
             <div className="grid grid-cols-2 gap-2">
                 <Button
                     variant={mode === 'distance' ? 'primary' : 'secondary'}
-                    onClick={() => setMode(mode === 'distance' ? null : 'distance')}
+                    onClick={() => handleModeChange('distance')}
                     leftIcon={<Ruler size={16} />}
                     className="w-full justify-start"
                 >
@@ -25,7 +40,7 @@ const MeasurementTools = () => {
                 </Button>
                 <Button
                     variant={mode === 'area' ? 'primary' : 'secondary'}
-                    onClick={() => setMode(mode === 'area' ? null : 'area')}
+                    onClick={() => handleModeChange('area')}
                     leftIcon={<BoxSelect size={16} />}
                     className="w-full justify-start"
                 >
@@ -64,7 +79,7 @@ const MeasurementTools = () => {
 
             <div className="text-xs text-slate-500">
                 <p>• Click to add points</p>
-                <p>• Right-click to finish measurement</p>
+                <p>• Double-click to finish measurement</p>
             </div>
         </div>
     );

@@ -115,6 +115,92 @@ const authController = {
         } catch (error) {
             next(error);
         }
+    },
+
+    /**
+     * PUT /api/v1/auth/profile
+     * Update user profile
+     */
+    async updateProfile(req, res, next) {
+        try {
+            const { username, email, bio, avatarUrl, preferences } = req.body;
+            const user = await User.findByPk(req.user.id);
+
+            if (!user) {
+                return next(new AppError('User not found', 404));
+            }
+
+            // Check if username is being changed and if it's already taken
+            if (username && username !== user.username) {
+                const usernameExists = await User.findOne({ where: { username } });
+                if (usernameExists) {
+                    return next(new AppError('Username already taken', 400));
+                }
+            }
+
+            // Check if email is being changed and if it's already taken
+            if (email && email !== user.email) {
+                const emailExists = await User.findOne({ where: { email } });
+                if (emailExists) {
+                    return next(new AppError('Email already registered', 400));
+                }
+            }
+
+            // Update allowed fields
+            const updates = {};
+            if (username) updates.username = username;
+            if (email) updates.email = email;
+            if (bio !== undefined) updates.bio = bio;
+            if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+            if (preferences) updates.preferences = { ...user.preferences, ...preferences };
+
+            await user.update(updates);
+
+            res.json({
+                success: true,
+                data: user.toSafeJSON(),
+                message: 'Profile updated successfully'
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    /**
+     * PUT /api/v1/auth/password
+     * Change password
+     */
+    async changePassword(req, res, next) {
+        try {
+            const { currentPassword, newPassword } = req.body;
+
+            if (!currentPassword || !newPassword) {
+                return next(new AppError('Please provide current and new password', 400));
+            }
+
+            if (newPassword.length < 6) {
+                return next(new AppError('Password must be at least 6 characters', 400));
+            }
+
+            const user = await User.findByPk(req.user.id);
+
+            // Verify current password
+            const isMatch = await user.validatePassword(currentPassword);
+            if (!isMatch) {
+                return next(new AppError('Current password is incorrect', 401));
+            }
+
+            // Update password
+            user.passwordHash = newPassword; // Will be hashed by beforeUpdate hook
+            await user.save();
+
+            res.json({
+                success: true,
+                message: 'Password updated successfully'
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 };
 

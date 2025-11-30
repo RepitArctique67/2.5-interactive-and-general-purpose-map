@@ -5,28 +5,40 @@ import UserProfile from './UserProfile';
 import ContributionHistory from './ContributionHistory';
 import UserPreferences from './UserPreferences';
 import authService from '../../services/authService';
+import useUserStore from '../../store/userStore';
 import { clsx } from 'clsx';
 import './UserPanel.css';
 
 const UserPanel = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [user, setUser] = useState(null);
-    const [activeTab, setActiveTab] = useState('profile'); // profile, history, preferences
+    const [activeTab, setActiveTab] = useState('profile');
+    const { user, isAuthenticated, login, logout } = useUserStore();
 
+    // Attempt to restore user session on mount
     useEffect(() => {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, []);
+        const restoreSession = async () => {
+            const token = useUserStore.getState().token;
+            if (token && !user) {
+                try {
+                    const response = await authService.getProfile();
+                    login(token, response.data);
+                } catch (error) {
+                    console.error('Session restoration failed:', error);
+                    logout(); // Clear invalid token
+                }
+            }
+        };
+        restoreSession();
+    }, [user, login, logout]);
 
-    const handleLogin = (userData) => {
-        setUser(userData);
+    const handleLogin = async (userData) => {
+        // userData contains {token, user} from authService
+        login(userData.token, userData.user);
+        setActiveTab('profile');
     };
 
     const handleLogout = () => {
-        authService.logout();
-        setUser(null);
+        logout();
         setIsOpen(false);
     };
 
@@ -36,10 +48,10 @@ const UserPanel = () => {
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 transition-all shadow-lg border border-slate-700/50 backdrop-blur-sm"
             >
-                {user ? (
+                {isAuthenticated && user?.avatarUrl ? (
                     <img
-                        src={user.avatar}
-                        alt={user.name}
+                        src={user.avatarUrl}
+                        alt={user.username}
                         className="w-8 h-8 rounded-full border border-blue-500/50"
                     />
                 ) : (
@@ -52,7 +64,7 @@ const UserPanel = () => {
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-slate-700/50 bg-slate-900/50">
                         <h2 className="font-semibold text-slate-100">
-                            {user ? 'Account' : 'Sign In'}
+                            {isAuthenticated ? 'Account' : 'Sign In'}
                         </h2>
                         <button
                             onClick={() => setIsOpen(false)}
@@ -64,7 +76,7 @@ const UserPanel = () => {
 
                     {/* Content */}
                     <div className="p-4 max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar">
-                        {user ? (
+                        {isAuthenticated ? (
                             <>
                                 {/* Tabs */}
                                 <div className="flex p-1 bg-slate-800/50 rounded-lg mb-6">

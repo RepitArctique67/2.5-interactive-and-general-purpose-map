@@ -106,7 +106,10 @@ describe('Timeline', () => {
         const callArg = mockOnYearChange.mock.calls[0][0];
         // The component calls onYearChange with a function: prevYear => ...
         // We need to execute that function to verify the result
-        const result = callArg(2025);
+        let result;
+        act(() => {
+            result = callArg(2025);
+        });
         expect(result).toBe(2025);
     });
 
